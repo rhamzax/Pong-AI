@@ -5,6 +5,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from collections import deque
 
+import torch
+from dqn_network import DQNNetwork
+
 gym.register_envs(ale_py)
 
 def resize_observation(obs):
@@ -19,9 +22,6 @@ def main():
 
     obs = resize_observation(obs)
     print(f"Min value: {obs.min()}, Max value: {obs.max()}")
-    plt.imshow(obs, cmap='gray')
-    plt.savefig('preprocessed_frame.png')
-    plt.close()
 
     # Create a frame stack to hold the first 4 frames
     frame_stack = deque(maxlen=4)
@@ -33,6 +33,8 @@ def main():
     print(f"Action space: {env.action_space}")
     print(f"Number of actions: {env.action_space.n}")
     
+    network = DQNNetwork(input_shape=(4, 84, 84), num_actions=6)
+
     done = False
     step_count = 0
     episode_reward = 0
@@ -44,6 +46,10 @@ def main():
         
         obs = resize_observation(obs)
         frame_stack.append(obs)
+        stacked = np.array(list(frame_stack))
+        stacked_tensor = torch.FloatTensor(stacked).unsqueeze(0)  # Add batch dimension
+        q_values = network(stacked_tensor)
+        print(f"Q-values: {q_values}")
         episode_reward += reward
         step_count += 1
         
