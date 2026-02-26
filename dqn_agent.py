@@ -47,7 +47,7 @@ class DQNAgent:
             return random.randint(0, self.num_actions - 1)
         else:
             with torch.no_grad():
-                state_tensor = torch.FloatTensor(state).unsqueeze(0).to(self.device)
+                state_tensor = torch.FloatTensor(state).unsqueeze(0).to(self.device) / 255.0  # Normalize here
                 q_values = self.network(state_tensor)
                 # if np.random.random() < 0.01:
                 #     print(f"Q-values: {q_values}, Max: {q_values.max().item():.4f}")
@@ -66,21 +66,35 @@ class DQNAgent:
         
         batch = self.replay_buffer.sample(batch_size)
 
-        states = torch.FloatTensor(np.array(batch.state)).to(self.device)
+        # Convert to float32 and normalize ONLY when creating the tensor batch
+        states = torch.FloatTensor(np.array(batch.state)).to(self.device) / 255.0
+        next_states = torch.FloatTensor(np.array(batch.next_state)).to(self.device) / 255.0
+
         actions = torch.LongTensor(np.array(batch.action)).to(self.device)
         rewards = torch.FloatTensor(np.array(batch.reward)).to(self.device)
-        next_states = torch.FloatTensor(np.array(batch.next_state)).to(self.device)
         dones = torch.BoolTensor(np.array(batch.done)).to(self.device)
 
         q_values = self.network(states)
         q_values_taken = q_values.gather(1, actions.unsqueeze(1)).squeeze(1)
 
         with torch.no_grad():
-            next_q_values = self.target_network(next_states)
-            max_next_q_values = next_q_values.max(dim=1)[0]
-            target_q_values = rewards + self.gamma * max_next_q_values * (~dones).float()
+            #Vanilla DQN target calculation (for reference):
+            # next_q_values = self.target_network(next_states)
+            # max_next_q_values = next_q_values.max(dim=1)[0]
+            # target_q_values = rewards + self.gamma * max_next_q_values * (~dones).float()
 
-        loss = nn.functional.mse_loss(q_values_taken, target_q_values)
+            # Double DQN target calculation:
+            # 1. Main network chooses the best action
+            best_next_actions = self.network(next_states).argmax(dim=1)
+            
+            # 2. Target network evaluates that specific action
+            next_q_values = self.target_network(next_states)
+            evaluated_next_q_values = next_q_values.gather(1, best_next_actions.unsqueeze(1)).squeeze(1)
+            
+            # 3. Calculate target Q using the evaluated values
+            target_q_values = rewards + self.gamma * evaluated_next_q_values * (~dones).float()
+
+        loss = nn.functional.smooth_l1_loss(q_values_taken, target_q_values)
         
         # if np.random.random() < 0.01:
         #     print(f"Loss: {loss.item():.6f}, Q-values range: [{q_values_taken.min():.4f}, {q_values_taken.max():.4f}]")

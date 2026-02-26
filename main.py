@@ -92,8 +92,8 @@ def main():
 def resize_observation(obs):
     obs = cv2.cvtColor(obs, cv2.COLOR_RGB2GRAY)
     obs = cv2.resize(obs, (84, 84), interpolation=cv2.INTER_AREA)
-    obs = obs.astype(np.float32) / 255.0
-    return obs
+    # Return as uint8 (0-255), do NOT divide by 255.0 yet!
+    return obs.astype(np.uint8)
 
 
 def plot_rewards(rewards, window=50):
