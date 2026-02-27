@@ -108,7 +108,7 @@ class DQNAgent:
         self.optimizer.step()
         
         # Linear epsilon decay applied safely
-        self.epsilon = max(self.epsilon_end, self.epsilon - (1.0 / 100000))
+        self.epsilon = max(self.epsilon_end, self.epsilon - (1.0 / 10000))
         
         return loss.item()
     

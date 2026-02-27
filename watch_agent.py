@@ -18,14 +18,14 @@ def resize_observation(obs):
 
 def main():
     # Notice render_mode="rgb_array"! This lets us capture the color frames.
-    env = gym.make("ALE/Pong-v5", render_mode="rgb_array")
+    env = gym.make("ALE/Pong-v5", render_mode="rgb_array", difficulty=0)
     
     # Initialize the agent
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     agent = DQNAgent(num_actions=env.action_space.n, device=device)
     
     # Load your best checkpoint
-    checkpoint_file = "pong_model_ep400.pt" # Change this to your specific checkpoint if needed
+    checkpoint_file = "easy_mode/pong_model_ep450.pt" # Change this to your specific checkpoint if needed
     try:
         _, _ = agent.load_checkpoint(checkpoint_file)
         print(f"Successfully loaded {checkpoint_file}!")

@@ -13,7 +13,7 @@ gym.register_envs(ale_py)
 
 
 def main():
-    env = gym.make("ALE/Pong-v5", difficulty=3)
+    env = gym.make("ALE/Pong-v5", difficulty=0)
     obs, info = env.reset()
 
     obs = resize_observation(obs)
@@ -27,10 +27,10 @@ def main():
     total_steps = 0
     start_episode = 0
     try:
-        start_episode, total_steps = agent.load_checkpoint("pong_model_ep50.pt")
+        # start_episode, total_steps = agent.load_checkpoint("pong_model_ep50.pt")
         start_episode = 0
-        agent.epsilon = 0.50 # Force the agent to explore more at the start of training, since we're starting from a checkpoint
-        print("Model loaded from pong_model.pt!")
+        # agent.epsilon = 0.50 # Force the agent to explore more at the start of training, since we're starting from a checkpoint
+        # print("Model loaded from pong_model.pt!")
     except FileNotFoundError:
         print("No saved model found. Starting from scratch.")
 
